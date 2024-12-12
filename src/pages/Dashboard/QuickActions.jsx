@@ -1,11 +1,14 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const QuickActions = () => {
+    const navigate = useNavigate();
     const actions = [
         { 
             icon: '📝', 
             title: 'New Resident', 
-            description: 'Register a new resident' 
+            description: 'Register a new resident' ,
+            onClick: () => navigate('/residents/add')
         },
         { 
             icon: '🏠', 
@@ -27,6 +30,7 @@ const QuickActions = () => {
                     <div 
                         key={index} 
                         className="flex items-center p-3 bg-gray-100 rounded-md hover:bg-gray-200 cursor-pointer transition"
+                        onClick={action.onClick}
                     >
                         <div className="mr-4 text-2xl">{action.icon}</div>
                         <div>

@@ -1,51 +1,61 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import React, { lazy, Suspense } from "react";
+import { 
+  BrowserRouter as Router, 
+  Routes, 
+  Route, 
+  Link 
+} from "react-router-dom";
 import "./App.css";
+import NavBar from "./components/NavBar";
+
+// Lazy load components for better performance
+const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
+const ResidentList = lazy(() => import("./pages/Residents/ResidentList"));
+const ResidentDetails = lazy(() => import("./pages/Residents/ResidentDetails"));
+const AddResident = lazy(() => import("./pages/Residents/AddResident")); // Add this line
+const VacantRooms = lazy(() => import("./pages/Rooms/VacantRooms"));
+const AllocateRoom = lazy(() => import("./pages/Rooms/AllocateRoom"));
+
+// Loading Fallback Component
+function LoadingFallback() {
+  return (
+    <div className="loading-container">
+      <div className="spinner"></div>
+      <p>Loading...</p>
+    </div>
+  );
+}
+
+// Not Found Component
+function NotFound() {
+  return (
+    <div className="not-found">
+      <h2>404 - Page Not Found</h2>
+      <Link to="/">Go to Home</Link>
+    </div>
+  );
+}
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
-
   return (
-    <main className="container">
-      <div><p>Hello World! its a good morning</p></div>
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <Router>
+      <div className="container">
+        {/* Suspense provides a fallback while components are loading */}
+        <Suspense fallback={<LoadingFallback />}>
+          <NavBar/>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/residents/list" element={<ResidentList />} />
+            <Route path="/residents/add" element={<AddResident />} /> {/* Add this line */}
+            <Route path="/rooms/vacant" element={<VacantRooms />} />
+            <Route path="/residents/:residentId" element={<ResidentDetails />} />
+            <Route path="/rooms/allocate/:roomNumber" element={<AllocateRoom />} />
+            {/* Catch-all route for undefined paths */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    </Router>
   );
 }
 
