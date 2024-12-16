@@ -1,24 +1,19 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path";  // Import `path` module for resolving absolute paths
 
 const host = process.env.TAURI_DEV_HOST;
 
-// https://vitejs.dev/config/
-export default defineConfig(async () => ({
+export default defineConfig({
   plugins: [react()],
-  css:{
-    postcss:'./postcss.config.js',
+  css: {
+    postcss: './postcss.config.js',
   },
-
-  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-  //
-  // 1. prevent vite from obscuring rust errors
-  clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
+  clearScreen: false,  // Disable Vite's clearing of the console screen
   server: {
     port: 1420,
     strictPort: true,
-    host: host || false,
+    host: host || false,  // Conditional on whether the host is defined
     hmr: host
       ? {
           protocol: "ws",
@@ -27,8 +22,13 @@ export default defineConfig(async () => ({
         }
       : undefined,
     watch: {
-      // 3. tell vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
     },
   },
-}));
+  resolve: {
+    alias: {
+      // Resolving @tauri-apps/api to ensure correct module import
+      '@tauri-apps/api': path.resolve(__dirname, 'node_modules/@tauri-apps/api'), // Fix for Tauri API import
+    },
+  },
+});

@@ -4,17 +4,11 @@ import ResidentStats from "./ResidentsStats";
 import RoomOccupancy from "./RoomOccupancy";
 import QuickActions from "./QuickActions";
 import RecentActivities from "./RecentActivities";
-
+import useFetchStats from "../../hooks/useFetchStats"; // Adjusted import path
+import LoadingSpinner from "../../components/LoadingSpinner"; // Ensure correct import path
 
 const Dashboard = () => {
-     // Placeholder data - in a real app, this would come from backend/API
-     const statsData = {
-        totalResidents: 150,
-        occupiedRooms: 120,
-        vacantRooms: 30,
-        newResidentsThisMonth: 15,
-        evictedResidentsThisMonth: 5
-    };
+    const { statsData, loading, error } = useFetchStats();
 
     const recentActivities = [
         { 
@@ -37,24 +31,31 @@ const Dashboard = () => {
         }
     ];
 
-    return(
+    return (
         <div className="min-h-screen bg-gray-100 py-6">
-            <div className="container mx-auto">    
-                <DashboardHeader />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <ResidentStats stats={statsData} />
-                    <RoomOccupancy occupancy={statsData} />
-                    <QuickActions />
+            {loading ? (
+                <LoadingSpinner />
+            ) : error ? (
+                <div className="text-center text-red-500 whitespace-pre-line px-4">
+                    {error}
                 </div>
+            ) : (
+                <div className="container mx-auto">    
+                    <DashboardHeader />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <ResidentStats stats={statsData} />
+                        <RoomOccupancy occupancy={statsData} />
+                        <QuickActions />
+                    </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <RecentActivities activities={recentActivities} />
-                    {/* You can add more components here */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <RecentActivities activities={recentActivities} />
+                        {/* You can add more components here */}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
-
-
 };
+
 export default Dashboard;
