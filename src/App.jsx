@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import "./App.css";
 import NavBar from "./components/NavBar";
+import CreatAccount from "./pages/Login/CreatAccount";
 
 // Lazy load components for better performance
 const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
@@ -15,6 +16,7 @@ const ResidentDetails = lazy(() => import("./pages/Residents/ResidentDetails"));
 const AddResident = lazy(() => import("./pages/Residents/AddResident")); // Add this line
 const VacantRooms = lazy(() => import("./pages/Rooms/VacantRooms"));
 const AllocateRoom = lazy(() => import("./pages/Rooms/AllocateRoom"));
+const Login = lazy(() => import("./pages/Login/Login"));
 
 // Loading Fallback Component
 function LoadingFallback() {
@@ -45,6 +47,8 @@ function App() {
           <NavBar/>
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/creatAccount" element={<CreatAccount/>}/>
             <Route path="/residents/list" element={<ResidentList />} />
             <Route path="/residents/add" element={<AddResident />} /> {/* Add this line */}
             <Route path="/rooms/vacant" element={<VacantRooms />} />
