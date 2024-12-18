@@ -10,6 +10,7 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@shadcn/ui": "^0.0.4",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-shell": "^2",
     "lucide-react": "^0.468.0",
@@ -17,6 +18,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.0.2",
     "recharts": "^2.14.1",
+    "shadcn-ui": "^0.9.4",
     "tailwindcss": "^3.4.16"
   },
   "devDependencies": {

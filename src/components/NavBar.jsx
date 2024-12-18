@@ -14,7 +14,9 @@ const NavBar = () => {
         ],
         rooms: [
             { label: "Room Allocation", href: "/rooms/allocate/-1" },
-            { label: "Vacant Rooms", href: "/rooms/vacant" }
+            { label: "Vacant Rooms", href: "/rooms/vacant" },
+            { label: "Rooms List", href: "/rooms/list" },
+            { label: "Room Management", href: "/rooms/manage" }
         ],
         reports: [
             { label: "Occupancy Report", href: "/reports/occupancy" },

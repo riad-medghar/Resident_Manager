@@ -9,6 +9,7 @@ import "./App.css";
 import NavBar from "./components/NavBar";
 import CreatAccount from "./pages/Login/CreatAccount";
 
+
 // Lazy load components for better performance
 const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
 const ResidentList = lazy(() => import("./pages/Residents/ResidentList"));
@@ -17,6 +18,8 @@ const AddResident = lazy(() => import("./pages/Residents/AddResident")); // Add 
 const VacantRooms = lazy(() => import("./pages/Rooms/VacantRooms"));
 const AllocateRoom = lazy(() => import("./pages/Rooms/AllocateRoom"));
 const Login = lazy(() => import("./pages/Login/Login"));
+const RoomsList = lazy(() => import("./pages/Rooms/RoomsList"));
+const RoomManagement = lazy(() => import("./pages/Rooms/RoomManagment"));
 
 // Loading Fallback Component
 function LoadingFallback() {
@@ -50,9 +53,11 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/creatAccount" element={<CreatAccount/>}/>
             <Route path="/residents/list" element={<ResidentList />} />
+            <Route path="/rooms/list" element={<RoomsList />} />
             <Route path="/residents/add" element={<AddResident />} /> {/* Add this line */}
             <Route path="/rooms/vacant" element={<VacantRooms />} />
             <Route path="/residents/:residentId" element={<ResidentDetails />} />
+            <Route path="/rooms/manage" element={<RoomManagement />} />
             <Route path="/rooms/allocate/:roomNumber" element={<AllocateRoom />} />
             {/* Catch-all route for undefined paths */}
             <Route path="*" element={<NotFound />} />
