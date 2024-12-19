@@ -20,6 +20,9 @@ const AllocateRoom = lazy(() => import("./pages/Rooms/AllocateRoom"));
 const Login = lazy(() => import("./pages/Login/Login"));
 const RoomsList = lazy(() => import("./pages/Rooms/RoomsList"));
 const RoomManagement = lazy(() => import("./pages/Rooms/RoomManagment"));
+const OccupancyReport = lazy(() => import("./pages/Reports/OccupancyReport"));
+const MaintenanceReport = lazy(() => import("./pages/Reports/MaintenanceReport"));
+const FinancialReport = lazy(() => import("./pages/Reports/FinancialReport"));
 
 // Loading Fallback Component
 function LoadingFallback() {
@@ -59,6 +62,9 @@ function App() {
             <Route path="/residents/:residentId" element={<ResidentDetails />} />
             <Route path="/rooms/manage" element={<RoomManagement />} />
             <Route path="/rooms/allocate/:roomNumber" element={<AllocateRoom />} />
+            <Route path="/reports/occupancy" element={<OccupancyReport/>} />
+            <Route path="/reports/maintenance" element={<MaintenanceReport/>} />
+            <Route path="/reports/financial" element={<FinancialReport/>} />
             {/* Catch-all route for undefined paths */}
             <Route path="*" element={<NotFound />} />
           </Routes>
