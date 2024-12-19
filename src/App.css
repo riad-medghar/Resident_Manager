@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.transition-container {
+  transition: all 0.5s ease;
+}
+
+.calendar-view {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.list-view {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.calendar-view-exit,
+.list-view-exit {
+  opacity: 0;
+  transform: scale(0.95);
+}

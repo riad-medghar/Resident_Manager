@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Plus, Edit, Trash2, Key, LogOut } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Key, LogOut ,Wrench} from 'lucide-react';
 import { useParams } from 'react-router-dom';
 
 const RoomManagement = () => {
@@ -52,9 +52,17 @@ const RoomManagement = () => {
 
   // Set Maintenance
   const handleSetMaintenance = (roomId) => {
-    handleUpdateRoom(roomId, { status: "maintenance" });
+    setRooms(rooms.map(room => {
+      if (room.id === roomId) {
+        return {
+          ...room,
+          status: room.status === "maintenance" ? room.previousStatus || "available" : "maintenance",
+          previousStatus: room.status === "maintenance" ? undefined : room.status
+        };
+      }
+      return room;
+    }));
   };
-
   // Filter rooms
   const filteredRooms = rooms.filter(room => {
     const matchesSearch = room.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -166,7 +174,7 @@ const RoomManagement = () => {
                           onClick={() => handleSetMaintenance(room.id)}
                           className="p-2 hover:bg-gray-100 rounded-md"
                         >
-                          <p className="w-4 h-4" /> {/* Changed Tool to Info */}
+                          <Wrench className="w-4 h-4" /> {/* Changed Tool to Info */}
                         </button>
                       </div>
                     </td>
