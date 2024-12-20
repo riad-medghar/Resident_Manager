@@ -8,7 +8,7 @@ import {
 import "./App.css";
 import NavBar from "./components/NavBar";
 import CreatAccount from "./pages/Login/CreatAccount";
-
+import ErrorBoundary from './components/ErrorBoundary'; // Import the ErrorBoundary
 
 // Lazy load components for better performance
 const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
@@ -46,31 +46,33 @@ function NotFound() {
 
 function App() {
   return (
-    <Router>
-      <div className="container">
-        {/* Suspense provides a fallback while components are loading */}
-        <Suspense fallback={<LoadingFallback />}>
-          <NavBar/>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/creatAccount" element={<CreatAccount/>}/>
-            <Route path="/residents/list" element={<ResidentList />} />
-            <Route path="/rooms/list" element={<RoomsList />} />
-            <Route path="/residents/add" element={<AddResident />} /> {/* Add this line */}
-            <Route path="/rooms/vacant" element={<VacantRooms />} />
-            <Route path="/residents/:residentId" element={<ResidentDetails />} />
-            <Route path="/rooms/manage" element={<RoomManagement />} />
-            <Route path="/rooms/allocate/:roomNumber" element={<AllocateRoom />} />
-            <Route path="/reports/occupancy" element={<OccupancyReport/>} />
-            <Route path="/reports/maintenance" element={<MaintenanceReport/>} />
-            <Route path="/reports/financial" element={<FinancialReport/>} />
-            {/* Catch-all route for undefined paths */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </div>
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <div className="container">
+          {/* Suspense provides a fallback while components are loading */}
+          <Suspense fallback={<LoadingFallback />}>
+            <NavBar/>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/creatAccount" element={<CreatAccount/>}/>
+              <Route path="/residents/list" element={<ResidentList />} />
+              <Route path="/rooms/list" element={<RoomsList />} />
+              <Route path="/residents/add" element={<AddResident />} /> {/* Add this line */}
+              <Route path="/rooms/vacant" element={<VacantRooms />} />
+              <Route path="/residents/:residentId" element={<ResidentDetails />} />
+              <Route path="/rooms/manage" element={<RoomManagement />} />
+              <Route path="/rooms/allocate/:roomNumber" element={<AllocateRoom />} />
+              <Route path="/reports/occupancy" element={<OccupancyReport/>} />
+              <Route path="/reports/maintenance" element={<MaintenanceReport/>} />
+              <Route path="/reports/financial" element={<FinancialReport/>} />
+              {/* Catch-all route for undefined paths */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </div>
+      </Router>
+    </ErrorBoundary>
   );
 }
 
