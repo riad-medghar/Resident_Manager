@@ -61,7 +61,7 @@ function App() {
             <Route path="/rooms/vacant" element={<VacantRooms />} />
             <Route path="/residents/:residentId" element={<ResidentDetails />} />
             <Route path="/rooms/manage" element={<RoomManagement />} />
-            <Route path="/rooms/allocate/:roomNumber" element={<AllocateRoom />} />
+            <Route path="/rooms/allocate/:room_number" element={<AllocateRoom />} />
             <Route path="/reports/occupancy" element={<OccupancyReport/>} />
             <Route path="/reports/maintenance" element={<MaintenanceReport/>} />
             <Route path="/reports/financial" element={<FinancialReport/>} />

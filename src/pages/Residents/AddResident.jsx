@@ -1,83 +1,89 @@
 import React, { useState } from 'react';
-import { User, Mail, Phone, MapPin, Calendar, CreditCard, Save, Clock } from 'lucide-react';
+import useResidents from '../../hooks/useResidents';
+import { useFetchRooms } from '../../hooks/useRooms';
+import { User, Mail, Phone, MapPin, Calendar, Save, Clock } from 'lucide-react';
 
 const AddResident = () => {
+    const { addResident, loading, successMessage, error } = useResidents();
+    const { rooms, loading: roomsLoading, error: roomsError } = useFetchRooms();
     const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        dateOfBirth: '',
-        address: '',
-        roomNumber: '',
-        emergencyContact: {
-            name: '',
-            relationship: '',
-            phone: ''
-        },
-        medicalNotes: '',
-        duration: '',
+        first_name: "",
+        last_name: "",
+        email_address: "",
+        phone_number: "",
+        date_of_birth: "",
+        room_number: "",
+        duration_of_stay: 0,
+        emergency_contact_name: "",
+        relationship_to_resident: "",
+        emergency_contact_phone_number: "",
+        medical_notes: "",
+        former_address: "",
     });
 
     const [errors, setErrors] = useState({});
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        
-        // Handle nested emergency contact fields
-        if (name.startsWith('emergencyContact.')) {
-            const field = name.split('.')[1];
-            setFormData(prev => ({
-                ...prev,
-                emergencyContact: {
-                    ...prev.emergencyContact,
-                    [field]: value
-                }
-            }));
-        } else {
-            setFormData(prev => ({
-                ...prev,
-                [name]: value
-            }));
-        }
+        setFormData((prev) => ({
+            ...prev,
+            [name]: name === 'duration_of_stay' ? parseInt(value, 10) || 0 : value,
+        }));
     };
 
     const validateForm = () => {
         const newErrors = {};
 
-        // Basic validation
-        if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-        if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-        
-        if (!formData.email.trim()) {
-            newErrors.email = 'Email is required';
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = 'Email is invalid';
+        // Basic validation for required fields
+        if (!formData.first_name.trim()) newErrors.first_name = 'First name is required';
+        if (!formData.last_name.trim()) newErrors.last_name = 'Last name is required';
+        if (!formData.email_address.trim()) {
+            newErrors.email_address = 'Email address is required';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email_address)) {
+            newErrors.email_address = 'Invalid email address';
         }
-
-        if (!formData.phone.trim()) {
-            newErrors.phone = 'Phone number is required';
-        } else if (!/^\+?[1-9]\d{1,14}$/.test(formData.phone)) {
-            newErrors.phone = 'Invalid phone number';
+        if (!formData.phone_number.trim()) {
+            newErrors.phone_number = 'Phone number is required';
+        } else if (!/^\+?[1-9]\d{1,14}$/.test(formData.phone_number)) {
+            newErrors.phone_number = 'Invalid phone number';
         }
-
-        if (!formData.roomNumber.trim()) newErrors.roomNumber = 'Room number is required';
+        if (!formData.room_number.trim()) newErrors.room_number = 'Room number is required';
+        if (!formData.duration_of_stay) newErrors.duration_of_stay = 'Duration of stay is required';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setErrors({});
+
+        if (!validateForm()) {
+            return;
+        }
+
         
-        if (validateForm()) {
-            // TODO: Implement actual submission logic
-            console.log('Form submitted:', formData);
-            alert('Resident added successfully!');
-        } else {
-            console.log('Form has errors');
+
+        const response = await addResident(formData);
+
+        if (response) {
+            setFormData({
+                first_name: "",
+                last_name: "",
+                email_address: "",
+                phone_number: "",
+                date_of_birth: "",
+                room_number: "",
+                duration_of_stay: 0,
+                emergency_contact_name: "",
+                relationship_to_resident: "",
+                emergency_contact_phone_number: "",
+                medical_notes: "",
+                former_address: "",
+            });
         }
     };
+
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -97,18 +103,18 @@ const AddResident = () => {
                             <User className="absolute left-3 top-3 text-gray-400" />
                             <input
                                 type="text"
-                                name="firstName"
-                                value={formData.firstName}
+                                name="first_name"
+                                value={formData.first_name}
                                 onChange={handleInputChange}
                                 placeholder="Enter first name"
                                 className={`w-full pl-10 pr-4 py-2 border rounded-md ${
-                                    errors.firstName 
+                                    errors.first_name 
                                         ? 'border-red-500 focus:ring-red-500' 
                                         : 'border-gray-300 focus:ring-indigo-500'
                                 }`}
                             />
-                            {errors.firstName && (
-                                <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
+                            {errors.first_name && (
+                                <p className="text-red-500 text-sm mt-1">{errors.first_name}</p>
                             )}
                         </div>
                     </div>
@@ -122,18 +128,18 @@ const AddResident = () => {
                             <User className="absolute left-3 top-3 text-gray-400" />
                             <input
                                 type="text"
-                                name="lastName"
-                                value={formData.lastName}
+                                name="last_name"
+                                value={formData.last_name}
                                 onChange={handleInputChange}
                                 placeholder="Enter last name"
                                 className={`w-full pl-10 pr-4 py-2 border rounded-md ${
-                                    errors.lastName 
+                                    errors.last_name 
                                         ? 'border-red-500 focus:ring-red-500' 
                                         : 'border-gray-300 focus:ring-indigo-500'
                                 }`}
                             />
-                            {errors.lastName && (
-                                <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
+                            {errors.last_name && (
+                                <p className="text-red-500 text-sm mt-1">{errors.last_name}</p>
                             )}
                         </div>
                     </div>
@@ -147,18 +153,18 @@ const AddResident = () => {
                             <Mail className="absolute left-3 top-3 text-gray-400" />
                             <input
                                 type="email"
-                                name="email"
-                                value={formData.email}
+                                name="email_address"
+                                value={formData.email_address}
                                 onChange={handleInputChange}
                                 placeholder="Enter email address"
                                 className={`w-full pl-10 pr-4 py-2 border rounded-md ${
-                                    errors.email 
+                                    errors.email_address 
                                         ? 'border-red-500 focus:ring-red-500' 
                                         : 'border-gray-300 focus:ring-indigo-500'
                                 }`}
                             />
-                            {errors.email && (
-                                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                            {errors.email_address && (
+                                <p className="text-red-500 text-sm mt-1">{errors.email_address}</p>
                             )}
                         </div>
                     </div>
@@ -172,18 +178,18 @@ const AddResident = () => {
                             <Phone className="absolute left-3 top-3 text-gray-400" />
                             <input
                                 type="tel"
-                                name="phone"
-                                value={formData.phone}
+                                name="phone_number"
+                                value={formData.phone_number}
                                 onChange={handleInputChange}
                                 placeholder="Enter phone number"
                                 className={`w-full pl-10 pr-4 py-2 border rounded-md ${
-                                    errors.phone 
+                                    errors.phone_number 
                                         ? 'border-red-500 focus:ring-red-500' 
                                         : 'border-gray-300 focus:ring-indigo-500'
                                 }`}
                             />
-                            {errors.phone && (
-                                <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                            {errors.phone_number && (
+                                <p className="text-red-500 text-sm mt-1">{errors.phone_number}</p>
                             )}
                         </div>
                     </div>
@@ -197,8 +203,8 @@ const AddResident = () => {
                             <Calendar className="absolute left-3 top-3 text-gray-400" />
                             <input
                                 type="date"
-                                name="dateOfBirth"
-                                value={formData.dateOfBirth}
+                                name="date_of_birth"
+                                value={formData.date_of_birth}
                                 onChange={handleInputChange}
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500"
                             />
@@ -212,20 +218,21 @@ const AddResident = () => {
                         </label>
                         <div className="relative">
                             <MapPin className="absolute left-3 top-3 text-gray-400" />
-                            <input
-                                type="text"
-                                name="roomNumber"
-                                value={formData.roomNumber}
+                            <select
+                                name="room_number"
+                                value={formData.room_number}
                                 onChange={handleInputChange}
-                                placeholder="Enter room number"
-                                className={`w-full pl-10 pr-4 py-2 border rounded-md ${
-                                    errors.roomNumber 
-                                        ? 'border-red-500 focus:ring-red-500' 
-                                        : 'border-gray-300 focus:ring-indigo-500'
-                                }`}
-                            />
-                            {errors.roomNumber && (
-                                <p className="text-red-500 text-sm mt-1">{errors.roomNumber}</p>
+                                className="w-full px-4 py-2 border rounded-md"
+                            >
+                                <option value="">Select a room</option>
+                                {rooms.map((room) => (
+                                <option key={room.id} value={room.id}>
+                                    Room {room.room_number}
+                                </option>
+                                ))}
+                            </select>
+                            {errors.room_number && (
+                                <p className="text-red-500 text-sm mt-1">{errors.room_number}</p>
                             )}
                         </div>
                     </div>
@@ -234,18 +241,21 @@ const AddResident = () => {
                 {/* Address */}
                 <div className="mt-6">
                     <label className="block text-gray-700 font-medium mb-2">
-                      Duration os stay (in months)
+                      Duration of stay (in months)
                     </label>
                     <div className="relative">
                         <Clock className="absolute left-3 top-3 text-gray-400" />
                         <input
                             type="number"
-                            name="duration"
-                            value={formData.duration}
+                            name="duration_of_stay"
+                            value={formData.duration_of_stay}
                             onChange={handleInputChange}
                             placeholder="Enter duration of stay"
                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500"
                         />
+                        {errors.duration_of_stay && (
+                            <p className="text-red-500 text-sm mt-1">{errors.duration_of_stay}</p>
+                        )}
                     </div>
                 </div>
 
@@ -262,8 +272,8 @@ const AddResident = () => {
                             </label>
                             <input
                                 type="text"
-                                name="emergencyContact.name"
-                                value={formData.emergencyContact.name}
+                                name="emergency_contact_name"
+                                value={formData.emergency_contact_name}
                                 onChange={handleInputChange}
                                 placeholder="Emergency contact name"
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500"
@@ -277,8 +287,8 @@ const AddResident = () => {
                             </label>
                             <input
                                 type="text"
-                                name="emergencyContact.relationship"
-                                value={formData.emergencyContact.relationship}
+                                name="relationship_to_resident"
+                                value={formData.relationship_to_resident}
                                 onChange={handleInputChange}
                                 placeholder="Relationship to resident"
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500"
@@ -292,12 +302,19 @@ const AddResident = () => {
                             </label>
                             <input
                                 type="tel"
-                                name="emergencyContact.phone"
-                                value={formData.emergencyContact.phone}
+                                name="emergency_contact_phone_number"
+                                value={formData.emergency_contact_phone_number}
                                 onChange={handleInputChange}
                                 placeholder="Emergency contact phone"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500"
+                                className={`w-full px-4 py-2 border rounded-md ${
+                                    errors.emergency_contact_phone_number 
+                                        ? 'border-red-500 focus:ring-red-500' 
+                                        : 'border-gray-300 focus:ring-indigo-500'
+                                }`}
                             />
+                            {errors.emergency_contact_phone_number && (
+                                <p className="text-red-500 text-sm mt-1">{errors.emergency_contact_phone_number}</p>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -308,8 +325,8 @@ const AddResident = () => {
                         Medical Notes
                     </label>
                     <textarea
-                        name="medicalNotes"
-                        value={formData.medicalNotes}
+                        name="medical_notes"
+                        value={formData.medical_notes}
                         onChange={handleInputChange}
                         placeholder="Enter any important medical information"
                         rows="4"
@@ -321,9 +338,9 @@ const AddResident = () => {
                 <div className="mt-8 flex justify-end">
                     <button
                         type="submit"
-                        className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center"
-                    >
-                        <Save className="mr-2" /> Save Resident
+                        disabled={loading}
+                        className={`${ loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700' } text-white px-6 py-2 rounded-md transition-colors flex items-center`}>
+                        {loading ? 'Saving... :3' : <><Save className="mr-2" /> Save Resident</>}
                     </button>
                 </div>
             </form>
