@@ -1,6 +1,12 @@
-// Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+
 fn main() {
-    resident_managment_lib::run()
+    tauri::Builder::default()
+        .setup(|_app| {
+            println!("Tauri app started. You can now call PocketBase APIs from your frontend.");
+            Ok(())
+        })
+        .run(tauri::generate_context!())
+        .expect("Error while running Tauri application");
 }
