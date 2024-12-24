@@ -25,6 +25,7 @@ const RoomsList = () => {
             <option value="available">Available</option>
             <option value="occupied">Occupied</option>
             <option value="maintenance">Maintenance</option>
+            <option value="reserved">Reserved</option>
           </select>
 
           {loading ? (
@@ -41,12 +42,15 @@ const RoomsList = () => {
                       ? "bg-green-500"
                       : room.status === "occupied"
                       ? "bg-blue-500"
-                      : "bg-yellow-500"
+                      : room.status === "maintenance"
+                      ? "bg-yellow-500"
+                      : "bg-red-500"
                   }`}
                 >
                   <h3 className="text-white font-bold">{room.room_number}</h3>
                   <p className="text-white">{room.room_type}</p>
                   <p className="text-white capitalize">{room.status}</p>
+                  <p className="text-white capitalize">{room.floor}</p>
                 </div>
               ))}
             </div>

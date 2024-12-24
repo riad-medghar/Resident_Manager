@@ -28,7 +28,7 @@ export default defineConfig(async () => ({
       : undefined,
     watch: {
       // 3. tell vite to ignore watching `src-tauri/pocketbase/pb_data`
-      ignored: ["**/src-tauri/pocketbase/pb_data/**"],
+      ignored: ["**/src-tauri/**", "**/pocketbase/**"],
     },
   },
 }));

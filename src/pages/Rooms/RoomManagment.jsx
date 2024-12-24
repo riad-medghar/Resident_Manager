@@ -92,6 +92,7 @@ const RoomManagement = () => {
               <option value="available">Available</option>
               <option value="occupied">Occupied</option>
               <option value="maintenance">Maintenance</option>
+              <option value="maintenance">Reserved</option>
             </select>
 
             <button
@@ -114,7 +115,9 @@ const RoomManagement = () => {
                 <thead>
                   <tr className="bg-gray-50">
                     <th className="p-4 text-left">Room</th>
+                    <th className="p-4 text-left">Floor</th>
                     <th className="p-4 text-left">Type</th>
+                    <th className="p-4 text-left">Price</th>
                     <th className="p-4 text-left">Status</th>
                     <th className="p-4 text-left">Actions</th>
                   </tr>
@@ -167,6 +170,7 @@ const RoomManagement = () => {
                               <option value="available">Available</option>
                               <option value="occupied">Occupied</option>
                               <option value="maintenance">Maintenance</option>
+                              <option value="maintenance">Reserved</option>
                             </select>
                           </td>
                           <td className="p-4 flex gap-2">
@@ -187,7 +191,9 @@ const RoomManagement = () => {
                       ) : (
                         <>
                           <td className="p-4">{room.room_number}</td>
+                          <td className="p-4">{room.floor}</td>
                           <td className="p-4">{room.room_type}</td>
+                          <td className="p-4">{room.price}</td>
                           <td className="p-4 capitalize">
                             <span
                               className={
@@ -195,7 +201,9 @@ const RoomManagement = () => {
                                   ? "text-green-500"
                                   : room.status === "occupied"
                                   ? "text-blue-500"
-                                  : "text-yellow-500"
+                                  : room.status === "maintenance"
+                                  ? "text-yellow-500"
+                                  : "text-red-500"
                               }
                             >
                               {room.status}
