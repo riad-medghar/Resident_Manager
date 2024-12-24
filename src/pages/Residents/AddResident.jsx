@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import useResidents from '../../hooks/useResidents';
-import { useFetchRooms } from '../../hooks/useRooms';
+import { useFetchRooms, useRooms } from '../../hooks/useRooms';
 import { User, Mail, Phone, MapPin, Calendar, Save, Clock } from 'lucide-react';
 
 const AddResident = () => {
     const { addResident, loading, successMessage, error } = useResidents();
-    const { rooms, loading: roomsLoading, error: roomsError } = useFetchRooms();
+    const { availableRooms, setRooms, loading: roomsLoading, error: roomsError } = useFetchRooms();
+    const { error: updateError, updateRoomStatus} = useRooms(roomsError, setRooms);
     const [formData, setFormData] = useState({
         first_name: "",
         last_name: "",
@@ -13,7 +14,8 @@ const AddResident = () => {
         phone_number: "",
         date_of_birth: "",
         room_number: "",
-        duration_of_stay: 0,
+        move_in_date: "",
+        move_out_date: "",
         emergency_contact_name: "",
         relationship_to_resident: "",
         emergency_contact_phone_number: "",
@@ -48,7 +50,8 @@ const AddResident = () => {
             newErrors.phone_number = 'Invalid phone number';
         }
         if (!formData.room_number.trim()) newErrors.room_number = 'Room number is required';
-        if (!formData.duration_of_stay) newErrors.duration_of_stay = 'Duration of stay is required';
+        if (!formData.move_in_date) newErrors.move_in_date = 'move in date is required';
+        if (!formData.move_out_date) newErrors.move_out_date = 'move out date is required';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -57,16 +60,33 @@ const AddResident = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setErrors({});
-
+    
         if (!validateForm()) {
             return;
         }
-
-        
-
-        const response = await addResident(formData);
-
-        if (response) {
+    
+        try {
+            //console.log("Adding resident with data:", formData);
+            const residentResponse = await addResident(formData);
+    
+            if (!residentResponse || !residentResponse.id) {
+                console.error("Failed to add resident.");
+                throw new Error("Resident creation failed.");
+            }
+    
+            //console.log("Resident added successfully:", residentResponse);
+    
+            //console.log("Updating room status for room:", formData.room_number);
+            const roomUpdateResponse = await updateRoomStatus(formData.room_number, "reserved");
+    
+            if (!roomUpdateResponse) {
+                console.error("Room status update failed with no response.");
+                throw new Error("Room status update failed.");
+            }
+    
+            //console.log("Room status updated successfully:", roomUpdateResponse);
+    
+            // Reset the form only if all operations are successful
             setFormData({
                 first_name: "",
                 last_name: "",
@@ -74,13 +94,16 @@ const AddResident = () => {
                 phone_number: "",
                 date_of_birth: "",
                 room_number: "",
-                duration_of_stay: 0,
+                move_in_date: "",
+                move_out_date: "",
                 emergency_contact_name: "",
                 relationship_to_resident: "",
                 emergency_contact_phone_number: "",
                 medical_notes: "",
                 former_address: "",
             });
+        } catch (err) {
+            console.error("Error saving resident:", err.message);
         }
     };
 
@@ -222,10 +245,12 @@ const AddResident = () => {
                                 name="room_number"
                                 value={formData.room_number}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-2 border rounded-md"
+                                className={`w-full px-4 py-2 border rounded-md ${
+                                    errors.room_number ? "border-red-500" : "border-gray-300"
+                                }`}
                             >
-                                <option value="">Select a room</option>
-                                {rooms.map((room) => (
+                                <option value="">Select a room for reservation</option>
+                                {availableRooms.map((room) => (
                                 <option key={room.id} value={room.id}>
                                     Room {room.room_number}
                                 </option>
@@ -238,23 +263,43 @@ const AddResident = () => {
                     </div>
                 </div>
 
-                {/* Address */}
+                {/* move in-out */}
                 <div className="mt-6">
                     <label className="block text-gray-700 font-medium mb-2">
-                      Duration of stay (in months)
+                      Move In Date
                     </label>
                     <div className="relative">
                         <Clock className="absolute left-3 top-3 text-gray-400" />
                         <input
-                            type="number"
-                            name="duration_of_stay"
-                            value={formData.duration_of_stay}
+                            type="date"
+                            name="move_in_date"
+                            value={formData.move_in_date}
                             onChange={handleInputChange}
                             placeholder="Enter duration of stay"
                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500"
                         />
-                        {errors.duration_of_stay && (
-                            <p className="text-red-500 text-sm mt-1">{errors.duration_of_stay}</p>
+                        {errors.move_in_date && (
+                            <p className="text-red-500 text-sm mt-1">{errors.move_in_date}</p>
+                        )}
+                    </div>
+                </div>
+
+                <div className="mt-6">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Move Out Date
+                    </label>
+                    <div className="relative">
+                        <Clock className="absolute left-3 top-3 text-gray-400" />
+                        <input
+                            type="date"
+                            name="move_out_date"
+                            value={formData.move_out_date}
+                            onChange={handleInputChange}
+                            placeholder="Enter duration of stay"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500"
+                        />
+                        {errors.move_out_date && (
+                            <p className="text-red-500 text-sm mt-1">{errors.move_out_date}</p>
                         )}
                     </div>
                 </div>
@@ -338,9 +383,9 @@ const AddResident = () => {
                 <div className="mt-8 flex justify-end">
                     <button
                         type="submit"
-                        disabled={loading}
-                        className={`${ loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700' } text-white px-6 py-2 rounded-md transition-colors flex items-center`}>
-                        {loading ? 'Saving... :3' : <><Save className="mr-2" /> Save Resident</>}
+                        disabled={loading || roomsLoading}
+                        className={`${ loading || roomsLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700' } text-white px-6 py-2 rounded-md transition-colors flex items-center`}>
+                        {loading || roomsLoading ? 'Saving... :3' : <><Save className="mr-2" /> Save Resident</>}
                     </button>
                 </div>
             </form>

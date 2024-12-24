@@ -1,24 +1,38 @@
 import React from 'react';
+import useResidents from '../../hooks/useResidents';
 
-const ResidentStats = ({ stats }) => {
+const ResidentStats = () => {
+    const {
+        totalResidents,
+        loading,
+        error,
+    } = useResidents();
+
+
     return (
         <div className="bg-white shadow-md rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">Resident Overview</h2>
-            <div className="grid grid-cols-2 gap-4">
-                <div className="bg-blue-100 p-4 rounded-md">
-                    <p className="text-sm text-gray-600">Total Residents</p>
-                    <p className="text-2xl font-bold text-blue-600">{stats.totalResidents}</p>
-                </div>
-                <div className="bg-green-100 p-4 rounded-md">
-                    <p className="text-sm text-gray-600">New This Month</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.newResidentsThisMonth}</p>
-                </div>
-                <div className="bg-green-100 p-4 rounded-md">
-                    <p className="text-sm text-gray-600">Evicted This Month</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.evictedResidentsThisMonth}</p>
-                </div>
+            {loading && <p>Loading...</p>}
+            {error && <p className="text-red-600">{error}</p>}
+            {!loading && !error && (
+                <>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-blue-100 p-4 rounded-md">
+                            <p className="text-sm text-gray-600">Total Residents</p>
+                            <p className="text-2xl font-bold text-blue-600">{totalResidents}</p>
+                        </div>
+                        <div className="bg-green-100 p-4 rounded-md">
+                            <p className="text-sm text-gray-600">New This Month</p>
+                            <p className="text-2xl font-bold text-green-600">69</p>
+                        </div>
+                        <div className="bg-green-100 p-4 rounded-md">
+                            <p className="text-sm text-gray-600">Evicted This Month</p>
+                            <p className="text-2xl font-bold text-green-600">69</p>
+                        </div>
 
-            </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 };

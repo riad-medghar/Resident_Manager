@@ -23,11 +23,17 @@ export function useFetchRooms() {
     }
   };
 
+  // Derive total occupied and available rooms
+  const availableRooms = rooms.filter((room) => room.status === "available");
+  const totalAvailableRooms = availableRooms.length;
+  const totalOccupiedRooms = rooms.filter((room) => room.status === "occupied").length;
+  const totalReservedRooms = rooms.filter((room) => room.status === "reserved").length;
+
   useEffect(() => {
     fetchRooms();
   }, []);
 
-  return { rooms, loading, error, fetchRooms, setRooms };
+  return { rooms, loading, error, fetchRooms, setRooms,availableRooms, totalAvailableRooms, totalOccupiedRooms,totalReservedRooms, };
 }
 
 // Hook for room management
@@ -45,12 +51,24 @@ export function useRooms(rooms, setRooms) {
 
   const updateRoomStatus = async (roomId, status) => {
     try {
-      const response = await pb.collection("rooms").update(roomId, { status });
-      setRooms((prevRooms) =>
-        prevRooms.map((room) => (room.id === roomId ? response : room))
-      );
+        // console.log("Updating room:", roomId, "to status:", status);
+        const response = await pb.collection("rooms").update(roomId, { status });
+
+        // Ensure setRooms is callable
+        if (typeof setRooms === "function") {
+            setRooms((prevRooms) =>
+                prevRooms.map((room) => (room.id === roomId ? response : room))
+            );
+        } else {
+            // console.warn("setRooms is not defined or not a function.");
+        }
+
+        //console.log("Room update response:", response);
+        return response; // Return the updated room object
     } catch (err) {
-      setError(err.message || "Failed to update room status");
+        // console.error("Error updating room status:", err.message);
+        setError(err.message || "Failed to update room status");
+        throw new Error("Failed to update room status.");
     }
   };
   
