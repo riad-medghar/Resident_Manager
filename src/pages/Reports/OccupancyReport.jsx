@@ -1,17 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Histogram from "../../components/Histogram";
+import { useFetchRooms } from '../../hooks/useRooms';
+import useResidents from '../../hooks/useResidents';
+
 
 const OccupancyReport = () => {
-    const [dateRange, setDateRange] = useState({ start: '', end: '' });
-    const [searchQuery, setSearchQuery] = useState('');
-    const [filters, setFilters] = useState({
+
+    const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const data = [50, 60, 70, 80, 90, 75, 85, 95, 65, 70, 80, 90];
+
+    const {
+        rooms,
+        loading: roomsLoading,
+        error: roomsError,
+        fetchRooms,
+        totalAvailableRooms,
+        totalOccupiedRooms,
+        totalReservedRooms,
+        totalRooms,
+    } = useFetchRooms();
+
+    const {
+        residents,
+        loading: residentsLoading,
+        error: residentsError,
+        fetchResidents,
+        totalResidents,
+    } = useResidents();
+
+    const [filters, setFilters] = useState({ 
         unitType: 'all',
         status: 'all',
         floor: 'all'
     });
 
-    const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const data = [50, 60, 70, 80, 90, 75, 85, 95, 65, 70, 80, 90];
+    const [searchQuery, setSearchQuery] = useState('');
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
+
+    const unitTypes = [...new Set(rooms.map(room => room.room_type))];
+    const statusTypes = [...new Set(rooms.map(room => room.status))];
+    const floors = [...new Set(rooms.map(room => room.floor))]; // Extract unique floors dynamically
+
+    useEffect(() => {
+        fetchRooms();
+        fetchResidents();
+    }, []);
+
+    const formatDate = (dateString) => {
+        if (!dateString) return "N/A";
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0'); // Add leading zero if needed
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-based
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`; // Return in dd/mm/yyyy format
+    };
+
+    // Merge rooms and residents data for enhanced reporting
+    const mergedData = rooms.map((room) => {
+        const matchingResident = residents.find((resident) => resident.room_number === room.id);
+
+        return {
+            ...room,
+            occupant: matchingResident?.first_name|| "N/A",
+            check_in: formatDate(matchingResident?.move_in_date),
+            check_out: formatDate(matchingResident?.move_out_date),
+        };
+    });
+
+    // Apply filters and search
+    const filteredData = mergedData.filter((room) => {
+        const matchesType = filters.unitType === 'all' || room.room_type === filters.unitType;
+        const matchesStatus = filters.status === 'all' || room.status === filters.status;
+        const matchesFloor = filters.floor === 'all' || room.floor === filters.floor;
+        const matchesSearch =
+            searchQuery === '' ||
+            room.room_number.includes(searchQuery) ||
+            room.occupant.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesType && matchesStatus && matchesFloor && matchesSearch;
+    });
 
     // Example expanded mock data
     const mockTableData = [
@@ -54,15 +120,8 @@ const OccupancyReport = () => {
     ];
 
     // Calculate statistics
-    const totalUnits = mockTableData.length;
-    const occupiedUnits = mockTableData.filter(unit => unit.status === "Occupied").length;
-    const vacantUnits = mockTableData.filter(unit => unit.status === "Vacant").length;
-    const reservedUnits = mockTableData.filter(unit => unit.status === "Reserved").length;
-    const occupancyRate = (occupiedUnits / totalUnits) * 100;
+    const occupancyRate = (totalOccupiedRooms / totalRooms) * 100;
 
-    const unitTypes = ["Studio", "1-Bedroom", "2-Bedroom", "3-Bedroom"];
-    const statusTypes = ["Occupied", "Vacant", "Reserved", "Maintenance"];
-    const floors = ["1", "2", "3", "4"];
 
     return (
         <div className="p-6 max-w-7xl mx-auto">
@@ -81,37 +140,20 @@ const OccupancyReport = () => {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-700">Total Units</h3>
-                    <div className="mt-2">
-                        <div className="text-3xl font-bold text-gray-800">{totalUnits}</div>
-                        <p className="text-gray-500">all units</p>
+                {[
+                        { title: "Total Units", value: totalRooms, color: "text-gray-800", subtext: `all Units` },
+                        { title: "Occupied Units", value: totalOccupiedRooms, color: "text-green-600", subtext: `${(occupancyRate).toFixed(1)}% occupied` },
+                        { title: "Available Units", value: totalAvailableRooms, color: "text-red-600", subtext: `available units` },
+                        { title: "Reserved Units", value: totalReservedRooms, color: "text-blue-600", subtext: `upcoming move-ins` },
+                    ].map((stat, idx) => (
+                        <div key={idx} className="bg-white rounded-lg shadow p-6">
+                        <h3 className="text-lg font-semibold text-gray-700">{stat.title}</h3>
+                        <div className="mt-2">
+                            <div className={`text-3xl font-bold ${stat.color}`}>{stat.value}</div>
+                            {stat.subtext && <p className="text-gray-500">{stat.subtext}</p>}
+                        </div>
                     </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-700">Occupied Units</h3>
-                    <div className="mt-2">
-                        <div className="text-3xl font-bold text-green-600">{occupiedUnits}</div>
-                        <p className="text-gray-500">{occupancyRate.toFixed(1)}% occupied</p>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-700">Vacant Units</h3>
-                    <div className="mt-2">
-                        <div className="text-3xl font-bold text-red-600">{vacantUnits}</div>
-                        <p className="text-gray-500">available units</p>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-700">Reserved Units</h3>
-                    <div className="mt-2">
-                        <div className="text-3xl font-bold text-blue-600">{reservedUnits}</div>
-                        <p className="text-gray-500">upcoming move-ins</p>
-                    </div>
-                </div>
+                ))}
             </div>
 
             {/* Alerts Section */}
@@ -137,45 +179,25 @@ const OccupancyReport = () => {
                 <div className="bg-white rounded-lg shadow p-6">
                     <h3 className="text-lg font-semibold text-gray-700 mb-4">Filters</h3>
                     <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Unit Type</label>
-                            <select 
-                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                value={filters.unitType}
-                                onChange={(e) => setFilters({...filters, unitType: e.target.value})}
-                            >
-                                <option value="all">All Types</option>
-                                {unitTypes.map(type => (
-                                    <option key={type} value={type}>{type}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                            <select 
-                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                value={filters.status}
-                                onChange={(e) => setFilters({...filters, status: e.target.value})}
-                            >
-                                <option value="all">All Status</option>
-                                {statusTypes.map(status => (
-                                    <option key={status} value={status}>{status}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Floor</label>
-                            <select 
-                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                value={filters.floor}
-                                onChange={(e) => setFilters({...filters, floor: e.target.value})}
-                            >
-                                <option value="all">All Floors</option>
-                                {floors.map(floor => (
-                                    <option key={floor} value={floor}>Floor {floor}</option>
-                                ))}
-                            </select>
-                        </div>
+                        {[
+                                { label: "Unit Type", options: unitTypes, filterKey: "unitType" },
+                                { label: "Status", options: statusTypes, filterKey: "status" },
+                                { label: "Floor", options: floors, filterKey: "floor" }
+                            ].map((filter, idx) => (
+                                <div key={idx}>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">{filter.label}</label>
+                                <select
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    value={filters[filter.filterKey]}
+                                    onChange={(e) => setFilters({ ...filters, [filter.filterKey]: e.target.value })}
+                                >
+                                    <option value="all">All {filter.label}s</option>
+                                    {filter.options.map(option => (
+                                        <option key={option} value={option}>{option}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        ))}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
                             <input
@@ -199,7 +221,7 @@ const OccupancyReport = () => {
 
                 <div className="bg-white rounded-lg shadow p-6 lg:col-span-2">
                     <h3 className="text-lg font-semibold text-gray-700 mb-4">Occupancy Trend</h3>
-                    <Histogram title="" labels={labels} data={data} />
+                    <Histogram title="Occupancy Trend" labels={labels} data={data} />
                 </div>
             </div>
 
@@ -246,25 +268,26 @@ const OccupancyReport = () => {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {mockTableData.map((row, index) => (
-                                <tr key={index} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.unit}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.type}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.floor}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.occupant}</td>
+                            {filteredData.map((room, idx) => (
+                                <tr key={idx} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{room.room_number}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{room.room_type}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{room.floor}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{room.occupant}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                            row.status === 'Occupied' ? 'bg-green-100 text-green-800' :
-                                            row.status === 'Vacant' ? 'bg-red-100 text-red-800' :
-                                            'bg-blue-100 text-blue-800'
+                                            room.status === 'available' ? 'bg-green-100 text-green-800' :
+                                            room.status === 'reserved' ? 'bg-red-100 text-red-800' :
+                                            room.status === 'occupied' ? 'bg-blue-100 text-blue-800' :
+                                            'bg-yellow-100 text-yellow-800'
                                         }`}>
-                                            {row.status}
+                                            {room.status}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.checkIn}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.checkOut}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.leaseEnd}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.rent}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{room.check_in}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{room.check_out}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{room.leaseEnd}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{room.price} no bliz</td>
                                 </tr>
                             ))}
                         </tbody>
