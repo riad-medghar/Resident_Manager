@@ -28,12 +28,13 @@ export function useFetchRooms() {
   const totalAvailableRooms = availableRooms.length;
   const totalOccupiedRooms = rooms.filter((room) => room.status === "occupied").length;
   const totalReservedRooms = rooms.filter((room) => room.status === "reserved").length;
+  const totalRooms = rooms.length
 
   useEffect(() => {
     fetchRooms();
   }, []);
 
-  return { rooms, loading, error, fetchRooms, setRooms,availableRooms, totalAvailableRooms, totalOccupiedRooms,totalReservedRooms, };
+  return { rooms, loading, error, fetchRooms, setRooms,availableRooms, totalAvailableRooms, totalOccupiedRooms,totalReservedRooms, totalRooms, };
 }
 
 // Hook for room management
