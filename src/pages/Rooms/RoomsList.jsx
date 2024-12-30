@@ -18,8 +18,12 @@ const RoomsList = () => {
     statusFilter === "all" ? true : room.status === statusFilter
   );
 
-  const manageRoom = (roomNumber) => {
-    navigate(`/rooms/manage`);
+  const manageRoom = (room) => {
+    if (room.status === "available") {
+      navigate(`/rooms/allocate/:room_number`);
+    } else {
+      navigate(`/rooms/manage`);
+    }
   };
 
   return (
@@ -40,7 +44,6 @@ const RoomsList = () => {
             <option value="maintenance">Maintenance</option>
             <option value="reserved">Reserved</option>
           </select>
-
           {loading ? (
             <p className="text-gray-600">Loading rooms...</p>
           ) : error ? (
@@ -56,7 +59,7 @@ const RoomsList = () => {
                     transition-all duration-200 hover:shadow-lg
                     ${statusColor[room.status]}
                   `}
-                  onClick={() => manageRoom(room.room_number)}
+                  onClick={() => manageRoom(room)}
                   style={{ cursor: "pointer" }}
                 >
                   <span className="text-white font-bold text-lg">
