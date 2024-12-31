@@ -23,6 +23,9 @@ const RoomManagement = lazy(() => import("./pages/Rooms/RoomManagment"));
 const OccupancyReport = lazy(() => import("./pages/Reports/OccupancyReport"));
 const MaintenanceReport = lazy(() => import("./pages/Reports/MaintenanceReport"));
 const FinancialReport = lazy(() => import("./pages/Reports/FinancialReport"));
+const InvoicesList   = lazy(() => import("./pages/Invoices/InvoicesList"));
+const InvoiceForm   = lazy(() => import("./pages/Invoices/InvoiceForm"));
+
 
 // Loading Fallback Component
 function LoadingFallback() {
@@ -65,6 +68,9 @@ function App() {
             <Route path="/reports/occupancy" element={<OccupancyReport/>} />
             <Route path="/reports/maintenance" element={<MaintenanceReport/>} />
             <Route path="/reports/financial" element={<FinancialReport/>} />
+            <Route path="/invoices/list" element={<InvoicesList />} />
+            <Route path="/invoices/create" element={<InvoiceForm />} />
+            <Route path="/invoices/edit/:invoiceId" element={<InvoiceForm />} />
             {/* Catch-all route for undefined paths */}
             <Route path="*" element={<NotFound />} />
           </Routes>

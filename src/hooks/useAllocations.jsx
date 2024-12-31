@@ -1,8 +1,6 @@
-import { useState, useEffect } from "react";
-import PocketBase from "pocketbase";
+import { useState, useEffect, useCallback } from "react";
+import pb from "../pocketsdk.js"
 
-const pb = new PocketBase("http://127.0.0.1:8090");
-pb.autoCancellation(false);
 
 const useAllocations = () => {
   const [allocations, setAllocations] = useState([]);
@@ -13,18 +11,22 @@ const useAllocations = () => {
   const clearErrors = () => setError(null);
 
   // Fetch all allocations
-  const fetchAllocations = async () => {
+  const fetchAllocations = useCallback(async () => {
     clearErrors();
     setLoading(true);
     try {
-      const response = await pb.collection("allocations").getList(1, 50);
-      setAllocations(response.items);
+    // Expand the relations so we get the actual resident & room objects:
+    const response = await pb.collection("allocations").getList(1, 100, {
+      sort: "-created",
+      expand: "resident_id,room_id"
+    }); 
+    setAllocations(response.items);
     } catch (err) {
       setError(err.message || "Failed to fetch allocations");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Create a new allocation
   const addAllocation = async (allocationData) => {
@@ -78,7 +80,7 @@ const useAllocations = () => {
 
   useEffect(() => {
     fetchAllocations();
-  }, []);
+  }, [fetchAllocations]);
 
   return {
     allocations,

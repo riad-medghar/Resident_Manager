@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Search, Plus, Edit, Save, X, Trash2, Key, LogOut, Wrench } from "lucide-react";
-import { useFetchRooms, useRooms } from "../../hooks/useRooms";
+import useFetchRooms from "../../hooks/useFetchRooms";
+import { useRooms } from "../../hooks/useRooms";
 
 const RoomManagement = () => {
   const { rooms, setRooms, loading, error } = useFetchRooms();
