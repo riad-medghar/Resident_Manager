@@ -116,86 +116,155 @@ export default function AllocateRoom() {
     }
 
 
-  return (
-    <div className="bg-white shadow-md rounded-lg p-6 max-w-xl mx-auto">
-      <h2 className="text-xl font-bold mb-4">Allocate Room</h2>
-      <form onSubmit={handleSubmit}>
-        {/* Resident Search */}
-        <div className="mb-4">
-          <label className="block mb-1">Resident Name</label>
-          <input
-            type="text"
-            className="w-full border rounded px-3 py-2"
-            placeholder="Start typing to search residents..."
-            value={residentQuery}
-            onChange={(e) => {
-              setResidentQuery(e.target.value);
-              setSelectedResident(null); // Reset selection if query changes
-            }}
-          />
-          {filteredResidents.length > 0 && (
-            <ul className="border rounded mt-2 max-h-40 overflow-auto">
-              {filteredResidents.map((res) => (
-                <li
-                  key={res.id}
-                  className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                  onClick={() => {
-                    setSelectedResident(res);
-                    setResidentQuery(`${res.first_name} ${res.last_name}`);
-                    setFilteredResidents([]);
-                  }}
-                >
-                  {res.first_name} {res.last_name}
-                </li>
-              ))}
-            </ul>
-          )}
+    return (
+        <div className="max-w-4xl mx-auto px-4 py-8">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="bg-indigo-600 px-6 py-4">
+                    <h1 className="text-2xl font-bold text-white flex items-center">
+                        <Building className="mr-3" /> Room Allocation
+                    </h1>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    <div className="bg-gray-50 p-6 rounded-lg">
+                        <h2 className="text-xl font-semibold text-gray-800 mb-4">Room Selection</h2>
+                        
+                        {/* Resident Name */}
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">
+                                    Resident Name
+                                </label>
+                                <div className="relative">
+                                    <User className="absolute left-3 top-3 text-gray-400" size={18} />
+                                    <input
+                                        type="text"
+                                        name="resident_name"
+                                        value={formData.resident_name}
+                                        onChange={handleInputChange}
+                                        className={`w-full pl-10 pr-4 py-2 border rounded-lg ${
+                                            errors.resident_name ? 'border-red-500' : 'border-gray-300'
+                                        } focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
+                                        placeholder="Enter resident name"
+                                    />
+                                    {errors.resident_name && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.resident_name}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Room Selection */}
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">
+                                    Select Room
+                                </label>
+                                <div className="relative">
+                                    <MapPin className="absolute left-3 top-3 text-gray-400" size={18} />
+                                    <select
+                                        name="room_number"
+                                        value={formData.room_number}
+                                        onChange={handleInputChange}
+                                        className={`w-full pl-10 pr-4 py-2 border rounded-lg ${
+                                            errors.room_number ? 'border-red-500' : 'border-gray-300'
+                                        } focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
+                                    >
+                                        <option value="">Select a room</option>
+                                        {availableRooms.map(room => (
+                                            <option key={room.id} value={room.number}>{room.number}</option>
+                                        ))}
+                                    </select>
+                                    {errors.room_number && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.room_number}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Move-in Date */}
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">
+                                    Move-in Date
+                                </label>
+                                <div className="relative">
+                                    <Calendar className="absolute left-3 top-3 text-gray-400" size={18} />
+                                    <input
+                                        type="date"
+                                        name="move_in_date"
+                                        value={formData.move_in_date}
+                                        onChange={handleInputChange}
+                                        className={`w-full pl-10 pr-4 py-2 border rounded-lg ${
+                                            errors.move_in_date ? 'border-red-500' : 'border-gray-300'
+                                        } focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
+                                    />
+                                    {errors.move_in_date && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.move_in_date}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Move-out Date */}
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">
+                                    Move-out Date
+                                </label>
+                                <div className="relative">
+                                    <Calendar className="absolute left-3 top-3 text-gray-400" size={18} />
+                                    <input
+                                        type="date"
+                                        name="move_out_date"
+                                        value={formData.move_out_date}
+                                        onChange={handleInputChange}
+                                        className={`w-full pl-10 pr-4 py-2 border rounded-lg ${
+                                            errors.move_out_date ? 'border-red-500' : 'border-gray-300'
+                                        } focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
+                                    />
+                                    {errors.move_out_date && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.move_out_date}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Payment Method */}
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">
+                                    Payment Method
+                                </label>
+                                <div className="relative">
+                                    <CreditCard className="absolute left-3 top-3 text-gray-400" size={18} />
+                                    <select
+                                        name="payment_method"
+                                        value={formData.payment_method}
+                                        onChange={handleInputChange}
+                                        className={`w-full pl-10 pr-4 py-2 border rounded-lg ${
+                                            errors.payment_method ? 'border-red-500' : 'border-gray-300'
+                                        } focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
+                                    >
+                                        <option value="monthly">Monthly</option>
+                                        <option value="full">Full Payment</option>
+                                    </select>
+                                    {errors.payment_method && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.payment_method}</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <div className="flex justify-end">
+                        <button
+                            type="submit"
+                            disabled={roomsLoading}
+                            className={`${
+                                roomsLoading ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'
+                            } text-white px-8 py-3 rounded-lg transition-colors flex items-center gap-2 text-lg font-semibold`}
+                        >
+                            {roomsLoading ? 'Allocating...' : 'Allocate Room'}
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
+    );
+};
 
-        {/* Room Dropdown */}
-        <div className="mb-4">
-          <label className="block mb-1">Available Rooms</label>
-          <select
-            className="w-full border rounded px-3 py-2"
-            value={selectedRoomId}
-            onChange={(e) => setSelectedRoomId(e.target.value)}
-          >
-            <option value="">-- Select a room --</option>
-            {availableRooms.map((room) => (
-              <option key={room.id} value={room.id}>
-                {room.room_number} (Floor: {room.floor}, Type: {room.room_type})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Duration */}
-        <div className="mb-4">
-          <label className="block mb-1">Duration (months)</label>
-          <input
-            type="number"
-            className="w-full border rounded px-3 py-2"
-            placeholder="Enter duration in months"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-            required
-          />
-        </div>
-
-        {/* Lease Expiration */}
-        {leaseExpiration && (
-          <p className="mb-4 text-gray-700">
-            Lease Expiration: <strong>{leaseExpiration}</strong>
-          </p>
-        )}
-
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Allocate Room
-        </button>
-      </form>
-    </div>
-  );
-}
+export default AllocateRoom;
