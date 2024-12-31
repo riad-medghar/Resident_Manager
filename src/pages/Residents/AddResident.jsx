@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import useResidents from '../../hooks/useResidents';
-import { useFetchRooms, useRooms } from '../../hooks/useRooms';
+import useFetchRooms from "../../hooks/useFetchRooms";
+import { useRooms } from "../../hooks/useRooms";
 import { User, Mail, Phone, MapPin, Calendar, Save, Clock } from 'lucide-react';
 
 const AddResident = () => {

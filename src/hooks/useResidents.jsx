@@ -1,8 +1,5 @@
-import { useState, useEffect } from "react";
-import PocketBase from "pocketbase";
-
-const pb = new PocketBase("http://127.0.0.1:8090");
-pb.autoCancellation(false);
+import { useState, useEffect, useCallback } from "react";
+import pb from "../pocketsdk.js"
 
 const useResidents = () => {
   const [residents, setResidents] = useState([]);
@@ -12,7 +9,7 @@ const useResidents = () => {
 
   const clearErrors = () => setError(null);
 
-  const fetchResidents = async () => {
+  const fetchResidents = useCallback(async () => {
     clearErrors();
     setLoading(true);
     try {
@@ -23,7 +20,7 @@ const useResidents = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const addResident = async (residentData) => {
     clearErrors();
@@ -76,7 +73,7 @@ const useResidents = () => {
 
   useEffect(() => {
     fetchResidents();
-  }, []);
+  }, [fetchResidents]);
 
   return {
     residents,

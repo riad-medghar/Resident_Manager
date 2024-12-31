@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useFetchRooms } from "../../hooks/useRooms";
+import useFetchRooms from "../../hooks/useFetchRooms";
 
 const statusColor = {
   available: "bg-green-500 hover:bg-green-600",
