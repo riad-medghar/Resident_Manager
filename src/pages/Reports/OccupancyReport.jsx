@@ -5,6 +5,43 @@ import useResidents from "../../hooks/useResidents";
 import useAllocations from "../../hooks/useAllocations";
 import useMonthlyOccupancy from "../../hooks/useMonthlyOccupency";
 import Histogram from "../../components/Histogram"; // or wherever your chart component is
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+
+
+/** Helper: compute how many allocations were active in each month (for the chart). */
+function computeActiveAllocationsByMonth(allocations) {
+  const monthlyCount = {};
+
+  allocations.forEach((alloc) => {
+    // Must have at least a start_date
+    if (!alloc.start_date) return;
+
+    const start = new Date(alloc.start_date);
+    // If no end_date, treat as ongoing until now (or far future)
+    const end = alloc.end_date ? new Date(alloc.end_date) : new Date(); 
+
+    // Round to the 1st of each month
+    let current = new Date(start.getFullYear(), start.getMonth(), 1);
+    const last = new Date(end.getFullYear(), end.getMonth(), 1);
+
+    while (current <= last) {
+      const key = `${current.getFullYear()}-${String(
+        current.getMonth() + 1
+      ).padStart(2, "0")}`;
+      monthlyCount[key] = (monthlyCount[key] || 0) + 1;
+
+      // Move to next month
+      current.setMonth(current.getMonth() + 1);
+    }
+  });
+
+  // Turn { "2024-01": 3, "2024-02": 5, ... } into arrays
+  const sortedMonths = Object.keys(monthlyCount).sort(); // e.g. ["2024-01","2024-02",...]
+  const counts = sortedMonths.map((m) => monthlyCount[m]);
+
+  return { months: sortedMonths, counts };
+}
 
 export default function OccupancyReport() {
   // 1) Load data from hooks
@@ -33,7 +70,7 @@ export default function OccupancyReport() {
     fetchAllocations,
   } = useAllocations();
 
-  const { labels, data, loading, error } = useMonthlyOccupancy();
+  const { labels, data, loading: occupancyLoading, error: occupencyError } = useMonthlyOccupancy();
 
   // 2) Basic states for filtering, searching
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,9 +83,23 @@ export default function OccupancyReport() {
     fetchAllocations();
   }, [fetchRooms, fetchResidents, fetchAllocations]);
 
-  // 4) Example chart data
-  const chartLabels = useMemo(() => ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], []);
-  const chartData = useMemo(() => [50,60,70,80,90,75,85,95,65,70,80,90], []);
+
+
+  // 4) Allocations Expiring Soon
+  const soonExpiringCount = useMemo(() => {
+    // Filter allocations that have an end_date
+    // within the next 30 days (and not in the past).
+    const now = new Date();
+    const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    return allocations.filter((alloc) => {
+      if (!alloc.end_date) return false; 
+      // parse as Date
+      const end = new Date(alloc.end_date);
+      return end >= now && end <= in30Days;
+    }).length;
+  }, [allocations]);
+
 
   // 5) Derive a simpler definition of occupancy from allocations if needed
   // For instance, an "active" allocation means a room is in use.
@@ -94,6 +145,8 @@ export default function OccupancyReport() {
     });
   }, [rooms, allocations]);
 
+  
+
   // 7) Filter & search the merged data if needed
   const filteredRooms = useMemo(() => {
     return mergedData.filter((r) => {
@@ -112,17 +165,90 @@ export default function OccupancyReport() {
     });
   }, [mergedData, filters, searchQuery]);
 
-  // 8) Loading / error states combined
+
+    // 8) Also filter the *allocations* themselves if you want the chart to match the filters:
+  // For example, if "status: occupied" means we only consider allocations
+  // whose room_id is "occupied"? Or if "floor: 2" means only allocations
+  // whose expand.room_id.floor == 2? Then we do:
+  const filteredAllocations = useMemo(() => {
+    return allocations.filter((alloc) => {
+      // If the user selected a status => check the expanded room's status
+      if (filters.status !== "all") {
+        const roomStatus = alloc.expand?.room_id?.status;
+        if (roomStatus !== filters.status) return false;
+      }
+      // If the user selected a floor => check expand.room_id.floor
+      if (filters.floor !== "all") {
+        const roomFloor = alloc.expand?.room_id?.floor;
+        if (roomFloor != filters.floor) return false;
+      }
+      // If there's a search => check occupant name or room_number
+      if (searchQuery) {
+        const occupantName = alloc.expand?.resident_id
+          ? `${alloc.expand.resident_id.first_name} ${alloc.expand.resident_id.last_name}`.toLowerCase()
+          : "";
+        const roomNum = alloc.expand?.room_id?.room_number?.toLowerCase() || "";
+        const q = searchQuery.toLowerCase();
+        if (!roomNum.includes(q) && !occupantName.includes(q)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [allocations, filters, searchQuery]);
+
+  // 9) Now we compute the chart data from the *filteredAllocations*
+  const { months: chartLabels, counts: chartData } = useMemo(() => {
+    return computeActiveAllocationsByMonth(filteredAllocations);
+  }, [filteredAllocations]);
+
+  // 10) Loading / error states combined
   const isLoading = roomsLoading || residentsLoading || allocationsLoading;
   const loadError = roomsError || residentsError || allocationsError;
+
+
+  // A function to handle PDF export
+  const handleExportPDF = async () => {
+    const element = document.getElementById("report-to-print");
+    if (!element) return;
+
+    try {
+      // Use html2canvas to turn the DOM node into a canvas
+      const canvas = await html2canvas(element, { scale: 2 }); 
+      const imgData = canvas.toDataURL("image/png");
+      
+      // Create a new jsPDF instance
+      // "p" = portrait, "mm" = millimeters, "a4" = page size
+      const pdf = new jsPDF("p", "mm", "a4");
+      
+      // Calculate width/height of the PDF page
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Add the image to the PDF
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, 0); 
+      // Setting the height to 0 tells jsPDF to auto-calculate height
+      // Alternatively, you can scale the image to fit in one page:
+      // pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      
+      // Save the PDF
+      pdf.save("OccupancyReport.pdf");
+    } catch (err) {
+      console.error("Failed to generate PDF:", err);
+    }
+  };
 
   // 9) Render
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      {/* Header with Export/Print buttons */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Occupancy Report</h1>
         <div className="flex space-x-4">
-          <button className="px-4 py-2 border rounded-lg hover:bg-gray-50">
+          {/* Export PDF button triggers handleExportPDF */}
+          <button
+            onClick={handleExportPDF}
+            className="px-4 py-2 border rounded-lg hover:bg-gray-50">
             Export Report
           </button>
           <button className="px-4 py-2 border rounded-lg hover:bg-gray-50">
@@ -133,7 +259,8 @@ export default function OccupancyReport() {
 
       {isLoading && <p>Loading data...</p>}
       {loadError && <p className="text-red-600">Error: {loadError}</p>}
-
+    {/* Wrap everything you want in the PDF in this container */}
+    <div id="report-to-print">
       {/* Stats Cards */}
       {!isLoading && !loadError && (
         <>
@@ -181,26 +308,29 @@ export default function OccupancyReport() {
           </div>
 
           {/* Example alert for soon-expiring allocations */}
-          <div className="mb-6">
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-              <div className="flex items-center">
-                <svg
-                  className="h-5 w-5 text-yellow-400 mr-3"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <p className="text-sm text-yellow-700">
-                  3 allocations expiring within the next 30 days
-                </p>
+          {soonExpiringCount > 0 && (
+            <div className="mb-6">
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                <div className="flex items-center">
+                  <svg
+                    className="h-5 w-5 text-yellow-400 mr-3"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <p className="text-sm text-yellow-700">
+                    {soonExpiringCount} allocation
+                    {soonExpiringCount > 1 ? "s" : ""} expiring within the next 30 days
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Filters + Chart */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -270,7 +400,12 @@ export default function OccupancyReport() {
               <h3 className="text-lg font-semibold text-gray-700 mb-4">
                 Occupancy Trend
               </h3>
-              <Histogram title="Occupancy Trend" labels={labels} data={data} />
+              {/* We pass the re-computed labels/data from filteredAllocations */}
+              <Histogram 
+                  title="Occupancy Trend" 
+                  labels={chartLabels} 
+                  data={chartData} 
+              />
             </div>
           </div>
 
@@ -279,6 +414,7 @@ export default function OccupancyReport() {
         </>
       )}
     </div>
+  </div>
   );
 }
 

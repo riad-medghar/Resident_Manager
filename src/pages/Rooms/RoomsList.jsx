@@ -50,18 +50,18 @@ const RoomsList = () => {
             <p className="text-red-500">Error: {error}</p>
           ) : (
             <div className="grid grid-cols-7 gap-4">
-            <div className="grid grid-cols-7 gap-4">
               {filteredRooms.map((room) => (
                 <div
                   key={room.id}
-                  className={`
-                    aspect-square rounded-lg shadow-md p-4
-                    flex flex-col items-center justify-center
-                    transition-all duration-200 hover:shadow-lg
-                    ${statusColor[room.status]}
-                  `}
-                  onClick={() => manageRoom(room)}
-                  style={{ cursor: "pointer" }}
+                  className={`p-4 rounded-lg shadow-md ${
+                    room.status === "available"
+                      ? "bg-green-500"
+                      : room.status === "occupied"
+                      ? "bg-blue-500"
+                      : room.status === "maintenance"
+                      ? "bg-yellow-500"
+                      : "bg-red-500"
+                  }`}
                 >
                   <span className="text-white font-bold text-lg">
                     {room.room_number}

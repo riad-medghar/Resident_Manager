@@ -1,12 +1,13 @@
+// src/pdf/generateInvoicePdf.js
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
 /**
  * Generate a basic invoice PDF
  * @param {object} invoice The invoice data object
- * @returns Promise<jsPDF> or jsPDF instance
+ * @param {object[]} payments An optional array of partial payments for this invoice
  */
-export async function generateInvoicePdf(invoice) {
+export async function generateInvoicePdf(invoice, payments = []) {
   const doc = new jsPDF();
 
   doc.setFontSize(16);
@@ -21,12 +22,31 @@ export async function generateInvoicePdf(invoice) {
   doc.text(`Amount Paid: $${invoice.amount_paid || 0}`, 10, 60);
   doc.text(`Status: ${invoice.status}`, 10, 70);
 
-  // Add notes if present
-  if (invoice.notes) {
-    doc.text(`Notes:`, 10, 80);
-    doc.text(invoice.notes, 10, 90);
+  // If you want to include partial payments in a table:
+  if (payments.length > 0) {
+    doc.text(`Payments:`, 10, 80);
+
+    // Using autoTable for a small table
+    const rows = payments.map((p) => [
+      p.payment_date,
+      `$${p.amount}`,
+      p.status,
+      p.payment_method,
+    ]);
+
+    doc.autoTable({
+      startY: 85,
+      head: [["Payment Date", "Amount", "Status", "Method"]],
+      body: rows,
+      theme: "striped",
+    });
   }
 
-  // If you want a table or items, you can use doc.autoTable(...)
+  // Add notes if present
+  let nextY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 90;
+  if (invoice.notes) {
+    doc.text(`Notes: ${invoice.notes}`, 10, nextY);
+  }
+
   return doc;
 }
