@@ -13,12 +13,14 @@ const QuickActions = () => {
         { 
             icon: '🏠', 
             title: 'Assign Room', 
-            description: 'Allocate room to resident' 
+            description: 'Allocate room to resident',
+            onClick: () => navigate('/rooms/allocate')
         },
         { 
             icon: '📊', 
             title: 'Generate Report', 
-            description: 'Create occupancy report' 
+            description: 'Create occupancy report',
+            onClick: () => navigate('/reports/occupancy')
         }
     ];
 

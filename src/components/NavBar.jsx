@@ -24,7 +24,7 @@ const NavBar = () => {
             { label: "Maintenance Report", href: "/reports/maintenance" }
         ],
         invoices: [
-            { label: "Invoices List", href: "/invoices/list" },
+            { label: "Invoices List", href: "/invoices" },
             { label: "Create Invoice", href: "/invoices/create" }
           ]          
     };
