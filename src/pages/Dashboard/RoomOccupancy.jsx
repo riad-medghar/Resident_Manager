@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFetchRooms } from '../../hooks/useRooms';
+import useFetchRooms from '../../hooks/useFetchRooms';
 
 
 
@@ -36,7 +36,7 @@ const RoomOccupancy = () => {
                             <p className="text-lg font-bold">{totalOccupiedRooms}</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-sm text-gray-600">Vacant Rooms</p>
+                            <p className="text-sm text-gray-600">Available Rooms</p>
                             <p className="text-lg font-bold">{totalAvailableRooms}</p>
                         </div>
                     </div>

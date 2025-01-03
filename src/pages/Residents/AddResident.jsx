@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import useResidents from '../../hooks/useResidents';
-import { User, Mail, Phone, Calendar } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, Save, Clock } from 'lucide-react';
 
 const AddResident = () => {
     const { addResident, loading, error } = useResidents();
@@ -58,7 +58,7 @@ const AddResident = () => {
             const residentResponse = await addResident(formData);
             if (residentResponse?.id) {
                 // Redirect to room allocation page with resident ID
-                window.location.href = `/room-allocation/${residentResponse.id}`;
+                window.location.href = `/rooms/allocate/${residentResponse.id}`;
             }
         } catch (err) {
             console.error("Error saving resident:", err.message);
