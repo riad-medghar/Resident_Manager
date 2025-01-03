@@ -1,14 +1,9 @@
-// File: src/pages/InvoicesList.jsx
 import React, { useEffect } from "react";
+import { Plus, Download, Edit2, Trash2, Check } from "lucide-react";
 import useInvoices from "../../hooks/useInvoices";
 import { generateInvoicePdf } from "../../pdf/generateInvoicePdf";
 
-/**
- * A purely UI-driven list of invoices.
- * All PocketBase calls come from the `useInvoices` hook.
- */
 export default function InvoicesList() {
-  // Destructure the hook’s state and methods
   const {
     invoices,
     loading,
@@ -18,12 +13,10 @@ export default function InvoicesList() {
     updateInvoice,
   } = useInvoices();
 
-  // On mount, fetch all invoices
   useEffect(() => {
-    fetchInvoices(); 
+    fetchInvoices();
   }, [fetchInvoices]);
 
-  // Mark an invoice as paid by calling updateInvoice
   async function markAsPaid(invoice) {
     try {
       await updateInvoice(invoice.id, {
@@ -35,7 +28,6 @@ export default function InvoicesList() {
     }
   }
 
-  // Delete an invoice via deleteInvoice
   async function handleDelete(id) {
     if (!window.confirm("Are you sure you want to delete this invoice?")) return;
     try {
@@ -45,22 +37,9 @@ export default function InvoicesList() {
     }
   }
 
-  // Download PDF (optionally including partial payment data)
   async function downloadPdf(inv) {
     try {
-      // If you want partial payments in the PDF,
-      // you can either fetch them via a `usePayments` hook
-      // or do a quick direct call here. For brevity, let's do a direct fetch:
-      // (If you have a separate payments hook, use that instead.)
-      
-      // Example direct fetch (optional):
-      // import pb from "../../pocketsdk"
-      // const allPayments = await pb.collection("payments").getFullList({
-      //   filter: `invoice_id = "${inv.id}"`,
-      //   sort: "payment_date",
-      // });
-      
-      const allPayments = []; // placeholder if you skip partial payments
+      const allPayments = [];
       const pdf = await generateInvoicePdf(inv, allPayments);
       pdf.save(`invoice-${inv.id}.pdf`);
     } catch (err) {
@@ -68,79 +47,127 @@ export default function InvoicesList() {
     }
   }
 
-  // Render the UI
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'paid':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'overdue':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Invoices</h1>
-      <a
-        href="/invoices/create"
-        className="inline-block bg-blue-500 text-white px-4 py-2 rounded"
-      >
-        + Create Invoice
-      </a>
+    <div className="max-w-7xl mx-auto my-8 bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="p-6 flex flex-row items-center justify-between border-b border-gray-200">
+        <h1 className="text-3xl font-bold text-gray-900">Invoices</h1>
+        <a
+          href="/invoices/create"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Plus size={16} />
+          Create Invoice
+        </a>
+      </div>
 
-      {loading && <p className="mt-4 text-gray-500">Loading invoices...</p>}
-      {error && <p className="mt-4 text-red-500">Error: {error}</p>}
+      <div className="p-6">
+        {loading && (
+          <div className="flex justify-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        )}
 
-      <table className="min-w-full mt-4">
-        <thead className="bg-gray-100 border-b">
-          <tr>
-            <th className="py-2 px-4 text-left">ID</th>
-            <th className="py-2 px-4 text-left">Amount Due</th>
-            <th className="py-2 px-4 text-left">Amount Paid</th>
-            <th className="py-2 px-4 text-left">Status</th>
-            <th className="py-2 px-4 text-left">Due Date</th>
-            <th className="py-2 px-4 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            Error: {error}
+          </div>
+        )}
+
+        <div className="grid gap-4">
           {invoices.map((inv) => (
-            <tr key={inv.id} className="border-b">
-              <td className="py-2 px-4">{inv.id}</td>
-              <td className="py-2 px-4">${inv.amount_due}</td>
-              <td className="py-2 px-4">${inv.amount_paid || 0}</td>
-              <td className="py-2 px-4 capitalize">{inv.status}</td>
-              <td className="py-2 px-4">{inv.due_date || ""}</td>
-              <td className="py-2 px-4 space-x-2">
-                <a
-                  href={`/invoices/edit/${inv.id}`}
-                  className="bg-green-500 text-white px-2 py-1 rounded"
-                >
-                  Edit
-                </a>
-                <button
-                  onClick={() => downloadPdf(inv)}
-                  className="bg-purple-500 text-white px-2 py-1 rounded"
-                >
-                  Download
-                </button>
-                {inv.status !== "paid" && (
+            <div
+              key={inv.id}
+              className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500">Invoice</span>
+                    <span className="font-medium">#{inv.id}</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(inv.status)}`}>
+                      {inv.status}
+                    </span>
+                  </div>
+                  <div className="flex gap-6">
+                    <div>
+                      <p className="text-sm text-gray-500">Amount Due</p>
+                      <p className="font-semibold">${inv.amount_due}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Amount Paid</p>
+                      <p className="font-semibold">${inv.amount_paid || 0}</p>
+                    </div>
+                    {inv.due_date && (
+                      <div>
+                        <p className="text-sm text-gray-500">Due Date</p>
+                        <p className="font-semibold">{inv.due_date}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={() => markAsPaid(inv)}
-                    className="bg-orange-500 text-white px-2 py-1 rounded"
+                    onClick={() => downloadPdf(inv)}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                   >
-                    Mark Paid
+                    <Download size={14} />
+                    PDF
                   </button>
-                )}
-                <button
-                  onClick={() => handleDelete(inv.id)}
-                  className="bg-red-500 text-white px-2 py-1 rounded"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
+                  <a
+                    href={`/invoices/edit/${inv.id}`}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <Edit2 size={14} />
+                    Edit
+                  </a>
+                  {inv.status !== "paid" && (
+                    <button
+                      onClick={() => markAsPaid(inv)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 border border-green-600 rounded-lg text-sm font-medium text-green-600 hover:bg-green-50 transition-colors"
+                    >
+                      <Check size={14} />
+                      Mark Paid
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDelete(inv.id)}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 border border-red-600 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
           ))}
 
           {invoices.length === 0 && !loading && !error && (
-            <tr>
-              <td colSpan="6" className="py-4 text-center">
-                No invoices found.
-              </td>
-            </tr>
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <p className="text-gray-500">No invoices found.</p>
+              <a
+                href="/invoices/create"
+                className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Create your first invoice
+              </a>
+            </div>
           )}
-        </tbody>
-      </table>
+        </div>
+      </div>
     </div>
   );
 }
