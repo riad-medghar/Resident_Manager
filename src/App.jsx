@@ -23,6 +23,11 @@ const RoomManagement = lazy(() => import("./pages/Rooms/RoomManagment"));
 const OccupancyReport = lazy(() => import("./pages/Reports/OccupancyReport"));
 const MaintenanceReport = lazy(() => import("./pages/Reports/MaintenanceReport"));
 const FinancialReport = lazy(() => import("./pages/Reports/FinancialReport"));
+const InvoicesList   = lazy(() => import("./pages/Invoices/InvoicesList"));
+const InvoiceForm   = lazy(() => import("./pages/Invoices/InvoiceForm"));
+const PaymentForm   = lazy(() => import("./pages/Invoices/PaymentForm"));
+const ResidentCharges = lazy(() => import("./pages/Residents/ResidentCharges"));
+
 
 // Loading Fallback Component
 function LoadingFallback() {
@@ -60,11 +65,17 @@ function App() {
             <Route path="/residents/add" element={<AddResident />} /> {/* Add this line */}
             <Route path="/rooms/vacant" element={<VacantRooms />} />
             <Route path="/residents/:residentId" element={<ResidentDetails />} />
+            <Route path="/residents/manage" element={<ResidentCharges />} />
             <Route path="/rooms/manage" element={<RoomManagement />} />
-            <Route path="/rooms/allocate/:room_number" element={<AllocateRoom />} />
+            <Route path="/rooms/allocate/:residentId" element={<AllocateRoom />} />
+            <Route path="/rooms/allocate" element={<AllocateRoom />} />
             <Route path="/reports/occupancy" element={<OccupancyReport/>} />
             <Route path="/reports/maintenance" element={<MaintenanceReport/>} />
             <Route path="/reports/financial" element={<FinancialReport/>} />
+            <Route path="/invoices" element={<InvoicesList />} />
+            <Route path="/invoices/create" element={<InvoiceForm />} />
+            <Route path="/invoices/edit/:invoiceId" element={<InvoiceForm />} />
+            <Route path="/invoices/payment/:invoiceId" element={<PaymentForm />} />
             {/* Catch-all route for undefined paths */}
             <Route path="*" element={<NotFound />} />
           </Routes>

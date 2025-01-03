@@ -22,7 +22,11 @@ const NavBar = () => {
             { label: "Occupancy Report", href: "/reports/occupancy" },
             { label: "Financial Report", href: "/reports/financial" },
             { label: "Maintenance Report", href: "/reports/maintenance" }
-        ]
+        ],
+        invoices: [
+            { label: "Invoices List", href: "/invoices" },
+            { label: "Create Invoice", href: "/invoices/create" }
+          ]          
     };
 
     const toggleMobileMenu = () => {
@@ -78,6 +82,7 @@ const NavBar = () => {
                         <DropMenu title="Residents" items={menuItems.residents} />
                         <DropMenu title="Rooms" items={menuItems.rooms} />
                         <DropMenu title="Reports" items={menuItems.reports} />
+                        <DropMenu title="Invoices" items={menuItems.invoices} />
 
                         <Link
                             to="/settings"

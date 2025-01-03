@@ -1,60 +1,77 @@
-import React from "react";
-import {Link} from "react-router-dom"
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { User, Lock, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
+  const [showPassword, setShowPassword] = useState(false);
 
-    return(
-        <div className=" min-h-screen shadow-md rounded-lg p-6 bg-gray-100">
-           <div className="bg-gray-200 p-8 rounded shadow-md w-full max-w-sm mx-auto"> 
-            <h2 className="text-2xl font-bold mb-4 text-gray-800 justify-center flex">
-                Login
-            </h2>
-            
-            <form>
-                <div className="flex flex-col justify-center items-center  ">
-                    <div className="rounded mb-4">
-                        <div className="mb-4 ">
-                            <label className=" block text-gray-700 text-sm font-bold " htmlFor="username">
-                                Username
-                            </label>
-                            <input
-                                id="username"
-                                type="text"
-                                className="shadow appearance-none border rounded w-auto py-2 px-3 mb-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                required
-                            />
-                            <label className="block text-gray-700 text-sm font-bold " htmlFor="password">
-                                Password
-                            </label>
-                            <input
-                                id="password"
-                                type="password"
-                                className="shadow appearance-none border rounded w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                required
-                            />
-
-
-                            <div className="mt-5 flex flex-col">
-                                <button
-                                    type="submit"
-                                    className="justify-center flex items-center  bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none
-                                                focus:shadow-outline w-20 mx-auto mt-4"
-                                >
-                                    Login
-                                 </button>
-                            </div>
-                        </div>
-                        </div>
-                </div>
-            </form>    
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="mb-8 text-center">
+            <h2 className="text-3xl font-bold text-gray-800">Welcome Back</h2>
+            <p className="text-gray-600 mt-2">Please sign in to your account</p>
+          </div>
+          
+          <form className="space-y-6">
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Username
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  placeholder="Enter your username"
+                  required
+                />
+              </div>
             </div>
-                                <div className="flex items-center py-5 justify-center" >
-                        <a href="" className="text-blue-500 hover:text-blue-700 ml-4"> Forgot Password</a>
-                        <Link to="/creatAccount" className="text-blue-500 hover:text-blue-700 ml-4">Creat an account </Link>
-                    </div>
- 
 
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  placeholder="Enter your password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2"
+            >
+              Sign In
+            </button>
+          </form>
+
+          <div className="mt-6 flex items-center justify-between">
+            <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700 transition">
+              Forgot Password?
+            </Link>
+            <Link to="/creatAccount" className="text-sm text-blue-600 hover:text-blue-700 transition">
+              Create Account
+            </Link>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
+
 export default Login;
